@@ -7,7 +7,7 @@ import {catchError, tap, throwError} from "rxjs";
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://localhost:7072/api/auth/login';
+  private apiUrl = 'https://localhost:7072/api/auth';
 
   constructor(private http: HttpClient) {}
 
@@ -17,20 +17,48 @@ export class AuthService {
           'Accept': 'application/json'
       });
 
-      const body = JSON.stringify({ email, password });
-
-      return this.http.post<any>(this.apiUrl, body, { headers }).pipe(
+      return this.http.post<string>(`${this.apiUrl}/login`, { email, password }, { headers }).pipe(
           tap(response => {
-              if (response && response.token) {
-                  localStorage.setItem('token', response.token);
-                  this.saveUserNameFromToken(response.token);
-                  console.log('Zalogowano pomyślnie!');
+              if (response) {
+                  try {
+                      localStorage.setItem('token', response);
+
+                      const storedToken = localStorage.getItem('token');
+
+                      if (storedToken) {
+                          this.saveUserNameFromToken(storedToken);
+                          console.log('You have logged in successfully!');
+                      } else {
+                          console.warn('Token was not stored correctly.');
+                      }
+                  } catch (error) {
+                      console.error('Error saving token to localStorage:', error);
+                  }
               } else {
-                  console.warn('Brak tokena w odpowiedzi serwera.');
+                  console.warn('Missing token in server response.');
               }
           }),
           catchError(error => {
-              console.error('Błąd logowania:', error);
+              console.error('Login error: ', error);
+              return throwError(() => error);
+          })
+      );
+  }
+
+  register(firstName: string, lastName: string, phoneNumber: string, email: string, password: string) {
+      const headers = new HttpHeaders({
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+      });
+
+      const body = JSON.stringify({ firstName, lastName, phoneNumber, email, password });
+
+      return this.http.post<any>(`${this.apiUrl}/register`, body, { headers }).pipe(
+          tap(response => {
+              console.log('User registered successfully!', response);
+          }),
+          catchError(error => {
+              console.error('Registration error: ', error);
               return throwError(() => error);
           })
       );
@@ -49,42 +77,46 @@ export class AuthService {
       return localStorage.getItem('userName');
   }
 
-    jwt_decode(token: string): any | null {
-        try {
-            const parts = token.split('.');
-            if (parts.length !== 3) {
-                console.error("Niepoprawny format tokena JWT.");
-                return null;
-            }
+  isLoggedIn(): boolean {
+      return !!this.getToken();
+  }
 
-            const base64Url = parts[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const decodedPayload = decodeURIComponent(atob(base64)
-                .split('')
-                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join(''));
+  jwt_decode(token: string): any | null {
+      try {
+          const parts = token.split('.');
+          if (parts.length !== 3) {
+              console.error("Incorrect JWT format");
+              return null;
+          }
 
-            return JSON.parse(decodedPayload);
-        } catch (error) {
-            console.error("Błąd podczas dekodowania tokena JWT:", error);
-            return null;
-        }
-    }
+          const base64Url = parts[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const decodedPayload = decodeURIComponent(atob(base64)
+              .split('')
+              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join(''));
 
-    saveUserNameFromToken(token: string): void {
-        const decoded = this.jwt_decode(token);
-        if (decoded) {
-            const userName = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userName || decoded.name;
+          return JSON.parse(decodedPayload);
+      } catch (error) {
+          console.error("Error decoding JWT token", error);
+          return null;
+      }
+  }
 
-            if (userName) {
-                localStorage.setItem("userName", userName);
-                console.log("Zapisano userName w LocalStorage:", userName);
-            } else {
-                console.warn("Nie znaleziono userName w tokenie JWT.");
-            }
-        } else {
-            console.error("Nie udało się zdekodować tokena.");
-        }
-    }
+  saveUserNameFromToken(token: string): void {
+      const decoded = this.jwt_decode(token);
+      if (decoded) {
+          const userName = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userName || decoded.name;
+
+          if (userName) {
+              localStorage.setItem("userName", userName);
+              console.log("Saved userName in LocalStorage:", userName);
+          } else {
+              console.warn("userName not found into JWT.");
+          }
+      } else {
+          console.error("Failed to decode token.");
+      }
+  }
 }
 

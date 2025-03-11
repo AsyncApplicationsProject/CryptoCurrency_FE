@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import {AuthService} from "../services/auth.service";
 
 @Component({
   selector: 'app-nav',
@@ -16,7 +17,7 @@ import { Component, OnInit } from '@angular/core';
         <a [routerLink]="['/']" fragment="offer" class="nav__item" (click)="closeNav()">Offer</a>
         <a [routerLink]="['']" class="nav__item" (click)="closeNav()">Contact</a>
         @if (isLoggedIn) {
-          <a [routerLink]="['/user']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">My Account</a>
+          <a [routerLink]="['/dashboard']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">My Account</a>
         } 
         @else {
           <a [routerLink]="['/login']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">Login</a>
@@ -128,6 +129,12 @@ import { Component, OnInit } from '@angular/core';
     .black-bars-color::before {
       background-color: #2e2e2e;
     }
+
+    @media (max-height: 630px) {
+      .nav {
+        align-items: flex-end;
+      }
+    }
   `]
 })
 
@@ -138,12 +145,16 @@ export class NavComponent implements OnInit {
   private navBtnBars: HTMLElement | null = null;
   private allNavItems: NodeListOf<Element> | null = null;
 
+  constructor(private authService: AuthService) {}
+
   ngOnInit(): void {
     setTimeout(() => {
       this.nav = document.querySelector('.nav');
       this.navBtnBars = document.querySelector('.burger-btn__bars');
       this.allNavItems = document.querySelectorAll('.nav__item');
     });
+
+    this.isLoggedIn = this.authService.isLoggedIn();
   }
 
   handleNav(): void {

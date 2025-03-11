@@ -90,7 +90,7 @@ form button, form input {
     padding: 1rem;
 }
 
-form span.validation__notification {
+form span.validation__notification, form .server_response {
     display: block;
     color: red;
     max-width: 283px;
@@ -102,6 +102,17 @@ form input.ng-invalid {
 
 form input.valid {
     border-color: green;
+}
+
+form .server_result {
+    color: #4db24d;
+    font-size: 2.4rem;
+    padding: 1rem;
+}
+@media (max-width: 768px) {
+    form:first-child {
+        margin-top: 6rem;
+    }
 }
 
 form div {

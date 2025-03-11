@@ -11,7 +11,7 @@ import {Router} from "@angular/router";
     <div class="header">
       <form (ngSubmit)="submit(form)" #form=ngForm>
         <div>
-          <input required emailValidator type="text" placeholder="E-mail" class="form-control" [class.ng-invalid]="!email.control.valid && email.control.dirty" [class.valid]="email.control.valid && email.control.dirty" [(ngModel)]="user.email" name="email" id="email" #email="ngModel">
+          <input required emailValidator type="text" placeholder="E-mail" class="form-control" [class.ng-invalid]="(!email.control.valid && email.control.dirty) || this.serverResponse" [class.valid]="(email.control.valid && email.control.dirty) && !this.serverResponse" [(ngModel)]="user.email" name="email" id="email" #email="ngModel">
           @if (email.errors?.['required'] && email.control.dirty) {
               <span class="validation__notification">This field is required</span>
           }
@@ -20,7 +20,7 @@ import {Router} from "@angular/router";
           }
         </div>
         <div>
-          <input required type="password" placeholder="Password" class="form-control" [class.ng-invalid]="!password.control.valid && password.control.dirty" [class.valid]="password.control.valid && password.control.dirty" [(ngModel)]="user.password" name="password" id="password" #password="ngModel">
+          <input required type="password" placeholder="Password" class="form-control" [class.ng-invalid]="(!password.control.valid && password.control.dirty) || this.serverResponse" [class.valid]="(password.control.valid && password.control.dirty) && !this.serverResponse" [(ngModel)]="user.password" name="password" id="password" #password="ngModel">
           @if (password.errors?.['required'] && password.control.dirty) {
             <span class="validation__notification">This field is required</span>
           }
@@ -28,6 +28,11 @@ import {Router} from "@angular/router";
         <div>
           <button type="submit" [disabled]="!form.valid">Login</button>
         </div>
+        @if (errorMessage) {
+          <div>
+            <span class="server_response">{{ errorMessage }}</span>
+          </div>
+        }
       </form>
     </div>
   `,
@@ -36,13 +41,21 @@ import {Router} from "@angular/router";
 })
 export class LoginPageComponent {
   protected user: UserLoginDTO = new UserLoginDTO("", "")
+  protected errorMessage: string | null = null
+  protected serverResponse: boolean = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
   submit(form: NgForm) {
     this.authService.login(this.user.email, this.user.password).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: (error) => console.error('Błąd logowania', error)
+      next: () => {
+        this.serverResponse = false;
+        this.router.navigate(['/dashboard'])
+      },
+      error: (error) => {
+        this.errorMessage = error.error.message
+        this.serverResponse = true;
+      }
     });
   }
 }
