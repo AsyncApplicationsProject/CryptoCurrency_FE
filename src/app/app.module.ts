@@ -17,6 +17,9 @@ import {EmailValidator} from "./Validators/email-validator";
 import {FirstLetterValidator} from "./Validators/first-letter-validator";
 import {PasswordValidator} from "./Validators/password-validator";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {AuthService} from "./services/auth.service";
+import {UserService} from "./services/user.service";
+import {NgOptimizedImage} from "@angular/common";
 
 @NgModule({
   declarations: [
@@ -30,16 +33,17 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
     RegisterPageComponent,
     UserPanelPageComponent,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,
-    EmailValidator,
-    FirstLetterValidator,
-    PasswordValidator,
-    HttpClientModule
-  ],
-  providers: [CryptoCurrencyService],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        FormsModule,
+        EmailValidator,
+        FirstLetterValidator,
+        PasswordValidator,
+        HttpClientModule,
+        NgOptimizedImage
+    ],
+  providers: [CryptoCurrencyService, AuthService, UserService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {AuthService} from "../services/auth.service";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-nav',
@@ -16,13 +17,12 @@ import {AuthService} from "../services/auth.service";
         <a [routerLink]="['/']" fragment="home" class="nav__item" (click)="closeNav()">Home</a>
         <a [routerLink]="['/']" fragment="offer" class="nav__item" (click)="closeNav()">Offer</a>
         <a [routerLink]="['']" class="nav__item" (click)="closeNav()">Contact</a>
-        @if (isLoggedIn) {
-          <a [routerLink]="['/dashboard']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">My Account</a>
-        } 
-        @else {
+        <a *ngIf="isLoggedIn$ | async; else loggedOut" [routerLink]="['/dashboard']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">My Account</a>
+        <a *ngIf="isLoggedIn$ | async" [routerLink]="['/']" class="nav__item" (click)="logout()">Logout</a>
+        <ng-template #loggedOut>
           <a [routerLink]="['/login']" class="nav__item" style="margin-top: 4rem;" (click)="closeNav()">Login</a>
           <a [routerLink]="['/register']" class="nav__item" (click)="closeNav()">Register</a>
-        }
+        </ng-template>
       </div>
     </nav>
   `,
@@ -37,20 +37,24 @@ import {AuthService} from "../services/auth.service";
       cursor: pointer;
       z-index: 1000;
     }
+
     .burger-btn:focus {
       outline: none;
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 8px;
     }
+
     .burger-btn:hover .burger-btn__bars::after,
     .burger-btn:hover .burger-btn__bars::before {
       width: 100%;
     }
+
     .burger-btn__box {
       position: relative;
       width: 40px;
       height: 30px;
     }
+
     .burger-btn__bars, .burger-btn__bars::after, .burger-btn__bars::before {
       position: absolute;
       right: 0;
@@ -59,13 +63,16 @@ import {AuthService} from "../services/auth.service";
       background-color: #fff;
       transition: width 0.3s;
     }
+
     .burger-btn__bars {
       width: 100%;
     }
+
     .burger-btn__bars::after {
       top: 13px;
       width: 60%;
     }
+
     .burger-btn__bars::before {
       top: 27px;
       width: 30%;
@@ -85,9 +92,11 @@ import {AuthService} from "../services/auth.service";
       transform: translateX(100%);
       transition: 0.5s cubic-bezier(0.65, 0.05, 0.36, 1);
     }
+
     .nav--active {
       transform: translateX(0);
     }
+
     .nav__item {
       position: relative;
       display: block;
@@ -97,6 +106,7 @@ import {AuthService} from "../services/auth.service";
       font-size: 3.8rem;
       text-decoration: none;
     }
+
     .nav__item::before {
       position: absolute;
       top: 0;
@@ -108,6 +118,7 @@ import {AuthService} from "../services/auth.service";
       transform: scaleY(0);
       transition: transform 0.3s;
     }
+
     .nav__item:hover::before {
       transform: scaleY(1);
     }
@@ -120,6 +131,7 @@ import {AuthService} from "../services/auth.service";
         transform: translateX(0);
       }
     }
+
     .nav-items-animation {
       animation: navItemsAnimation 1s both;
     }
@@ -139,13 +151,20 @@ import {AuthService} from "../services/auth.service";
 })
 
 export class NavComponent implements OnInit {
-  protected isLoggedIn: boolean = false;
+  protected isLoggedIn$ :Observable<boolean>;
 
   private nav: HTMLElement | null = null;
   private navBtnBars: HTMLElement | null = null;
   private allNavItems: NodeListOf<Element> | null = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {
+    this.isLoggedIn$ = this.authService.isLoggedIn$;
+  }
+
+  logout() {
+    this.closeNav();
+    this.authService.logout();
+  }
 
   ngOnInit(): void {
     setTimeout(() => {
@@ -153,14 +172,11 @@ export class NavComponent implements OnInit {
       this.navBtnBars = document.querySelector('.burger-btn__bars');
       this.allNavItems = document.querySelectorAll('.nav__item');
     });
-
-    this.isLoggedIn = this.authService.isLoggedIn();
   }
 
   handleNav(): void {
     if (this.nav && this.navBtnBars) {
       this.nav.classList.toggle('nav--active');
-      this.navBtnBars.classList.remove('black-bars-color');
       this.handleNavItemsAnimation();
     }
   }
@@ -168,17 +184,27 @@ export class NavComponent implements OnInit {
   closeNav(): void {
     if (this.nav) {
       this.nav.classList.remove('nav--active');
+      this.allNavItems?.forEach(item => {
+        item.classList.remove('nav-items-animation');
+      })
     }
   }
 
   handleNavItemsAnimation(): void {
     if (this.allNavItems) {
       let delayTime = 0;
-      this.allNavItems.forEach(item => {
-        item.classList.toggle('nav-items-animation');
-        (item as HTMLElement).style.animationDelay = '.' + delayTime + 's';
-        delayTime++;
-      });
+      if(this.nav?.classList.contains('nav--active')) {
+        this.allNavItems.forEach(item => {
+          item.classList.add('nav-items-animation');
+          (item as HTMLElement).style.animationDelay = '.' + delayTime + 's';
+          delayTime++;
+        });
+      }
+      else {
+        this.allNavItems.forEach(item => {
+          item.classList.remove('nav-items-animation');
+        })
+      }
     }
   }
 }

@@ -1,15 +1,21 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {catchError, tap, throwError} from "rxjs";
+import {BehaviorSubject, catchError, Observable, tap, throwError} from "rxjs";
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://localhost:7072/api/auth';
+    public loggingChange: BehaviorSubject<boolean>
+    public isLoggedIn$: Observable<boolean>
 
-  constructor(private http: HttpClient) {}
+    private apiUrl = 'https://localhost:7072/api/auth';
+
+    constructor(private http: HttpClient) {
+        this.loggingChange = new BehaviorSubject<boolean>(!!this.getToken());
+        this.isLoggedIn$ = this.loggingChange.asObservable();
+    }
 
   login(email: string, password: string) {
       const headers = new HttpHeaders({
@@ -26,7 +32,7 @@ export class AuthService {
                       const storedToken = localStorage.getItem('token');
 
                       if (storedToken) {
-                          this.saveUserNameFromToken(storedToken);
+                          this.saveUserIdFromToken(storedToken);
                           console.log('You have logged in successfully!');
                       } else {
                           console.warn('Token was not stored correctly.');
@@ -37,6 +43,7 @@ export class AuthService {
               } else {
                   console.warn('Missing token in server response.');
               }
+              this.loggingChange.next(true);
           }),
           catchError(error => {
               console.error('Login error: ', error);
@@ -66,20 +73,17 @@ export class AuthService {
 
   logout() {
       localStorage.removeItem('token');
-      localStorage.removeItem('userName');
+      localStorage.removeItem('userId');
+      this.loggingChange.next(false);
   }
 
   getToken(): string | null {
       return localStorage.getItem('token');
   }
 
-  getUserName(): string | null {
-      return localStorage.getItem('userName');
-  }
-
-  isLoggedIn(): boolean {
-      return !!this.getToken();
-  }
+    getUserId(): string | null {
+        return localStorage.getItem('userId');
+    }
 
   jwt_decode(token: string): any | null {
       try {
@@ -103,20 +107,36 @@ export class AuthService {
       }
   }
 
-  saveUserNameFromToken(token: string): void {
+  saveUserIdFromToken(token: string): void {
       const decoded = this.jwt_decode(token);
       if (decoded) {
-          const userName = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userName || decoded.name;
+          const userId = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userId;
 
-          if (userName) {
-              localStorage.setItem("userName", userName);
-              console.log("Saved userName in LocalStorage:", userName);
+          if (userId) {
+              localStorage.setItem("userId", userId);
+              console.log("Saved userId in LocalStorage:", userId);
           } else {
-              console.warn("userName not found into JWT.");
+              console.warn("userId not found in JWT.");
           }
       } else {
-          console.error("Failed to decode token.");
+            console.error("Failed to decode token.");
       }
   }
+
+    // saveUserNameFromToken(token: string): void {
+  //     const decoded = this.jwt_decode(token);
+  //     if (decoded) {
+  //         const userName = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userName || decoded.name;
+  //
+  //         if (userName) {
+  //             localStorage.setItem("userName", userName);
+  //             console.log("Saved userName in LocalStorage:", userName);
+  //         } else {
+  //             console.warn("userName not found into JWT.");
+  //         }
+  //     } else {
+  //         console.error("Failed to decode token.");
+  //     }
+  // }
 }
 
