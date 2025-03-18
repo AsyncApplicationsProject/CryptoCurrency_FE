@@ -1,23 +1,15 @@
 import {Component, OnInit} from '@angular/core';
-import {UserDTO} from "../models/UserDTO";
-import {UserService} from "../services/user.service";
 
 @Component({
   selector: 'app-user-panel-page',
   standalone: false,
   template: `
     <div class="user__panel">
-      <div class="user__panel__info">
-        <div class="img-container"></div>
-        <p>{{ user?.FirstName }} {{ user?.LastName }}</p>
-        <p>{{ user?.Email }}</p>
-        <p>Balance: {{ user?.Balance }} $</p>
-        <p>Profit:  $</p>
-      </div>
+      <app-user-info class="user__panel__info"></app-user-info>
       <div class="user__panel__market">
         <div class="user__panel__market--item">
           <div class="chart">
-            
+            <app-chart></app-chart>
           </div>
           <div class="action__container">
             <div class="action__container-item">
@@ -38,6 +30,24 @@ import {UserService} from "../services/user.service";
       display: flex;
     }
 
+    .user__panel__market {
+      flex: 3;
+      padding: 3rem 10rem 3rem 3rem;
+      background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_640.jpg");
+    }
+    
+    .user__panel__market--item {
+      background-color: white;
+      color: black;
+      padding: 1.5rem;
+      box-shadow: 0 0 5px black;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-evenly
+    }
+
     .user__panel__info {
       position: sticky;
       flex: 1;
@@ -48,37 +58,6 @@ import {UserService} from "../services/user.service";
       display: flex;
       flex-direction: column;
       align-items: center;
-    }
-
-    .user__panel__info p {
-      padding-top: 2rem;
-    }
-
-    .user__panel__market {
-      flex: 3;
-      padding: 3rem 10rem 3rem 3rem;
-    }
-
-    .img-container {
-      background-image: url("../../../public/user_avatar.jpg");
-      height: 10vh;
-      width: 10vh;
-      background-size: cover;
-      background-position: center;
-      border-radius: 50%;
-      margin-top: 3rem;
-    }
-
-    .user__panel__market {
-      background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_640.jpg");
-    }
-
-    .user__panel__market--item {
-      background-color: white;
-      color: black;
-      padding: 1.5rem;
-      box-shadow: 0 0 5px black;
-      border-radius: 8px;
     }
 
     .action__container {
@@ -145,27 +124,19 @@ import {UserService} from "../services/user.service";
         background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_1920.jpg");
       }
     }
+    
+    @media (max-width: 992px) {
+      .user__panel__market--item {
+        flex-direction: column;
+      }
+    }
 
     @media (max-width: 768px) {
       .user__panel {
         flex-direction: column;
       }
     }
+    
   `
 })
-export class UserPanelPageComponent implements OnInit {
-  user: UserDTO | null = null;
-
-  constructor(private userService: UserService) {}
-
-  ngOnInit() {
-    this.userService.getUserData().subscribe({
-      next: (userData) => {
-        this.user = userData;
-      },
-      error: (error) => {
-        console.error('Error loading user data:', error);
-      }
-    });
-  }
-}
+export class UserPanelPageComponent { }

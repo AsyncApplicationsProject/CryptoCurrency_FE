@@ -16,10 +16,13 @@ import {FormsModule} from "@angular/forms";
 import {EmailValidator} from "./Validators/email-validator";
 import {FirstLetterValidator} from "./Validators/first-letter-validator";
 import {PasswordValidator} from "./Validators/password-validator";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import {AuthService} from "./services/auth.service";
 import {UserService} from "./services/user.service";
 import {NgOptimizedImage} from "@angular/common";
+import {provideCharts, withDefaultRegisterables} from "ng2-charts";
+import {ChartComponent} from "./chart/chart.component";
+import { UserInfoComponent } from './user-info/user-info.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +35,7 @@ import {NgOptimizedImage} from "@angular/common";
     LoginPageComponent,
     RegisterPageComponent,
     UserPanelPageComponent,
+    UserInfoComponent,
   ],
     imports: [
         BrowserModule,
@@ -41,9 +45,10 @@ import {NgOptimizedImage} from "@angular/common";
         FirstLetterValidator,
         PasswordValidator,
         HttpClientModule,
-        NgOptimizedImage
+        NgOptimizedImage,
+        ChartComponent
     ],
-  providers: [CryptoCurrencyService, AuthService, UserService],
+  providers: [CryptoCurrencyService, AuthService, UserService, provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

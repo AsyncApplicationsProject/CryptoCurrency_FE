@@ -14,7 +14,15 @@ import { Component } from '@angular/core';
       <app-footer class="container"/>
     </footer>
   `,
-  styles: ``
+  styles: `
+  footer {
+    background-color: #222;
+    margin-top: 5rem;
+  }
+  app-offer {
+    display: block;
+  }
+  `
 })
 export class MainPageComponent {
 
