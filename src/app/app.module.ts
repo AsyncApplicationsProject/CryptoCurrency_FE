@@ -23,6 +23,7 @@ import {NgOptimizedImage} from "@angular/common";
 import {provideCharts, withDefaultRegisterables} from "ng2-charts";
 import {ChartComponent} from "./chart/chart.component";
 import { UserInfoComponent } from './user-info/user-info.component';
+import { ActionComponent } from './action/action.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import { UserInfoComponent } from './user-info/user-info.component';
     RegisterPageComponent,
     UserPanelPageComponent,
     UserInfoComponent,
+    ActionComponent,
   ],
     imports: [
         BrowserModule,

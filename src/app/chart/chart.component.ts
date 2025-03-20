@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartOptions, ChartData, ChartType } from 'chart.js';
+import { CryptoDTO } from "../models/CryptoDTO";
 
 @Component({
   selector: 'app-chart',
@@ -13,23 +14,19 @@ import { ChartOptions, ChartData, ChartType } from 'chart.js';
             [type]="chartType">
     </canvas>
   `,
-  styles: ``
+  styles: `
+  canvas {
+    max-height: 40vh;
+  }
+  `
 })
-export class ChartComponent {
+export class ChartComponent implements OnInit {
+  @Input() crypto: CryptoDTO | undefined;
 
   chartType: ChartType = 'line';
-
   chartData: ChartData = {
-    labels: ['Label 1', 'Label 2', 'Label 3'],
-    datasets: [
-      {
-        data: [65, 59, 80],
-        label: 'Sample Dataset',
-        backgroundColor: 'rgba(0,123,255,0.6)',
-        borderColor: 'rgba(0,123,255,1)',
-        borderWidth: 1
-      }
-    ]
+    labels: [],
+    datasets: []
   };
 
   chartOptions: ChartOptions = {
@@ -43,4 +40,40 @@ export class ChartComponent {
       }
     }
   };
+
+  ngOnInit() {
+    console.log('Received crypto data:', this.crypto);
+    if (this.crypto) {
+      this.updateChartData(this.crypto);
+    } else {
+      console.warn('No crypto data provided');
+    }
+  }
+
+
+  private updateChartData(crypto: CryptoDTO): void {
+    const labels: string[] = [];
+    const prices: number[] = [];
+
+    crypto.PriceHistory.forEach((history) => {
+      console.log(history);
+      if (history.Date && history.Price !== undefined) {
+        labels.push(new Date(history.Date).toLocaleTimeString());
+        prices.push(history.Price);
+      } else {
+        console.warn('Invalid data for price history', history);
+      }
+    });
+
+    this.chartData = {
+      labels: labels,
+      datasets: [{
+        data: prices,
+        label: crypto.Name,
+        backgroundColor: 'rgba(0,123,255,0.6)',
+        borderColor: 'rgba(0,123,255,1)',
+        borderWidth: 1
+      }]
+    };
+  }
 }

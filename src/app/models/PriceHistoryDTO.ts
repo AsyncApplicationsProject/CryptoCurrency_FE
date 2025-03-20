@@ -1,3 +1,3 @@
 export class PriceHistoryDTO {
-    constructor(public Date: Date, public Price: number) {}
+    constructor(public Date: string, public Price: number) {}
 }

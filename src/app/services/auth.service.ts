@@ -1,7 +1,8 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {BehaviorSubject, catchError, Observable, tap, throwError} from "rxjs";
-
+import {UserDTO} from "../models/UserDTO";
+import {UserService} from "./user.service";
 
 @Injectable({
   providedIn: 'root'
@@ -122,21 +123,5 @@ export class AuthService {
             console.error("Failed to decode token.");
       }
   }
-
-    // saveUserNameFromToken(token: string): void {
-  //     const decoded = this.jwt_decode(token);
-  //     if (decoded) {
-  //         const userName = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.userName || decoded.name;
-  //
-  //         if (userName) {
-  //             localStorage.setItem("userName", userName);
-  //             console.log("Saved userName in LocalStorage:", userName);
-  //         } else {
-  //             console.warn("userName not found into JWT.");
-  //         }
-  //     } else {
-  //         console.error("Failed to decode token.");
-  //     }
-  // }
 }
 
