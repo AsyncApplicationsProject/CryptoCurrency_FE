@@ -1,8 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {BehaviorSubject, catchError, Observable, tap, throwError} from "rxjs";
-import {UserDTO} from "../models/UserDTO";
-import {UserService} from "./user.service";
 
 @Injectable({
   providedIn: 'root'
@@ -81,10 +79,6 @@ export class AuthService {
   getToken(): string | null {
       return localStorage.getItem('token');
   }
-
-    getUserId(): string | null {
-        return localStorage.getItem('userId');
-    }
 
   jwt_decode(token: string): any | null {
       try {

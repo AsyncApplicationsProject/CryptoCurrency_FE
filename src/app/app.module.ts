@@ -24,6 +24,7 @@ import {provideCharts, withDefaultRegisterables} from "ng2-charts";
 import {ChartComponent} from "./chart/chart.component";
 import { UserInfoComponent } from './user-info/user-info.component';
 import { ActionComponent } from './action/action.component';
+import {TradeCryptoService} from "./services/trade-crypto.service";
 
 @NgModule({
   declarations: [
@@ -50,7 +51,7 @@ import { ActionComponent } from './action/action.component';
         NgOptimizedImage,
         ChartComponent
     ],
-  providers: [CryptoCurrencyService, AuthService, UserService, provideCharts(withDefaultRegisterables())],
+  providers: [CryptoCurrencyService, AuthService, UserService,  TradeCryptoService, provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

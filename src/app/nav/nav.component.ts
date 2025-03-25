@@ -175,6 +175,10 @@ export class NavComponent implements OnInit {
   }
 
   handleNav(): void {
+    this.nav = document.querySelector('.nav');
+    this.navBtnBars = document.querySelector('.burger-btn__bars');
+    this.allNavItems = document.querySelectorAll('.nav__item');
+
     if (this.nav && this.navBtnBars) {
       this.nav.classList.toggle('nav--active');
       this.handleNavItemsAnimation();

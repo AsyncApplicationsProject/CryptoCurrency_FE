@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {Observable} from "rxjs";
+import {Observable, take, tap} from "rxjs";
 import {CryptoDTO} from "../models/CryptoDTO";
 import {CryptoCurrencyService} from "../services/crypto-currency.service";
 import {UserDTO} from "../models/UserDTO";
@@ -20,7 +20,7 @@ import {UserService} from "../services/user.service";
           </div>
           
           <div class="crypto__info__container">
-            <app-action class="action__container"></app-action>
+            <app-action [cryptoSymbol]="crypto.Symbol" (newCryptoAmount)="updateCryptoAmount(crypto.Symbol, $event)" class="action__container"></app-action>
           
             <div *ngIf="user$ | async as user">
                 <p>Owned: {{ getOwnedAmount(user, crypto.Symbol) }} {{ crypto.Symbol }}</p>
@@ -148,5 +148,27 @@ export class UserPanelPageComponent implements OnInit {
   protected getOwnedAmount(user: UserDTO, cryptoSymbol: string): number {
     const walletItem = user.Wallet.find(item => item.CryptoSymbol === cryptoSymbol);
     return walletItem ? walletItem.Amount : 0;
+  }
+
+  protected updateCryptoAmount(cryptoSymbol: string, newAmount: number) {
+    this.user$.pipe(
+        take(1),
+        tap(user => {
+          if (user) {
+            const walletItem = user.Wallet.find(item => item.CryptoSymbol === cryptoSymbol);
+
+            if (walletItem) {
+              walletItem.Amount = newAmount;
+            } else {
+              user.Wallet.push({
+                CryptoSymbol: cryptoSymbol,
+                Amount: newAmount
+              });
+            }
+          } else {
+            console.warn('User not found.');
+          }
+        })
+    ).subscribe();
   }
 }

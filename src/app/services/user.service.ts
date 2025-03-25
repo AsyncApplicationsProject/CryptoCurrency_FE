@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AuthService } from "./auth.service";
 import { UserDTO } from "../models/UserDTO";
-import { BehaviorSubject, catchError, map, Observable, tap, throwError } from "rxjs";
+import {BehaviorSubject, catchError, map, Observable, take, tap, throwError} from "rxjs";
 import { UserCryptoDTO } from "../models/UserCryptoDTO";
 
 @Injectable({
@@ -41,7 +41,7 @@ export class UserService{
                     response.balance,
                     response.wallet
                         ? response.wallet.map((item: any) =>
-                            new UserCryptoDTO(item.id, item.userId, item.cryptoSymbol, item.amount)
+                            new UserCryptoDTO(item.cryptoSymbol, item.amount)
                         )
                         : []
                 );
