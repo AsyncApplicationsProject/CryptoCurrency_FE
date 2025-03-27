@@ -42,7 +42,7 @@ export class ChartComponent implements OnInit {
   };
 
   ngOnInit() {
-    console.log('Received crypto data:', this.crypto);
+    // console.log('Received crypto data:', this.crypto);
     if (this.crypto) {
       this.updateChartData(this.crypto);
     } else {
@@ -56,7 +56,7 @@ export class ChartComponent implements OnInit {
     const prices: number[] = [];
 
     crypto.PriceHistory.forEach((history) => {
-      console.log(history);
+      // console.log(history);
       if (history.Date && history.Price !== undefined) {
         labels.push(new Date(history.Date).toLocaleTimeString());
         prices.push(history.Price);

@@ -109,7 +109,7 @@ export class AuthService {
 
           if (userId) {
               localStorage.setItem("userId", userId);
-              console.log("Saved userId in LocalStorage:", userId);
+              console.log("Saved userId in LocalStorage:");
           } else {
               console.warn("userId not found in JWT.");
           }

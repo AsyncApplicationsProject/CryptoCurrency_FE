@@ -1,79 +1,99 @@
 import { Injectable } from '@angular/core';
-import { UserDTO } from '../models/UserDTO';
-import { Observable, take } from 'rxjs';
+import { Observable, Subject, take } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
+import { AuthService } from './auth.service';
+import { UserDTO } from '../models/UserDTO';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
 export class TradeCryptoService {
-  private hubConnection: signalR.HubConnection;
+    private hubConnection: signalR.HubConnection;
 
-  constructor() {
-    this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl('https://localhost:7072/tradeHub')
-        .configureLogging(signalR.LogLevel.Information)
-        .build();
+    constructor(private authService: AuthService) {
+        this.hubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('https://localhost:7072/tradeHub', {
+                accessTokenFactory: () => this.authService.getToken() ?? '',
+                transport: signalR.HttpTransportType.LongPolling,
+            })
+            .configureLogging(signalR.LogLevel.Information)
+            .withAutomaticReconnect()
+            .build();
 
-    this.hubConnection
-        .start()
-        .then(() => console.log('SignalR Connected'))
-        .catch((err) => console.error('Error connecting to SignalR:', err));
-  }
-
-  Buy(symbol: string, amount: number, user: Observable<UserDTO | null>, token: string | null) {
-    if (token) {
-      user.pipe(take(1)).subscribe((userData) => {
-        if (userData) {
-          this.hubConnection
-              .invoke('Buy', { symbol, amount, token })
-              .then(() => {
-                console.log(`Bought ${amount} of ${symbol}`);
-
-                const walletItem = userData.Wallet.find(item => item.CryptoSymbol === symbol);
-                if (walletItem) {
-                  walletItem.Amount += amount;
-                } else {
-                  userData.Wallet.push({ CryptoSymbol: symbol, Amount: amount });
-                }
-              })
-              .catch((err) => console.error('Buy failed:', err));
-        } else {
-          console.warn('User not found');
-        }
-      });
-    } else {
-      console.error('Token not found');
+        this.startConnection();
+        this.registerOnTradeResponse();
     }
-  }
 
-
-  Sell(symbol: string, amount: number, user: Observable<UserDTO | null>, token: string | null) {
-    if (token) {
-      user.pipe(take(1)).subscribe((userData) => {
-        if (userData) {
-          this.hubConnection
-              .invoke('Sell', { symbol, amount, token })
-              .then(() => {
-                console.log(`Sold ${amount} of ${symbol}`);
-
-                const walletItem = userData.Wallet.find(item => item.CryptoSymbol === symbol);
-                if (walletItem) {
-                  walletItem.Amount -= amount;
-                  if (walletItem.Amount <= 0) {
-                    userData.Wallet = userData.Wallet.filter(item => item.CryptoSymbol !== symbol);
-                  }
-                } else {
-                  console.warn(`User does not own any ${symbol}`);
-                }
-              })
-              .catch((err) => console.error('Sell failed:', err));
-        } else {
-          console.warn('User not found');
-        }
-      });
-    } else {
-      console.error('Token not found');
+    private startConnection() {
+        this.hubConnection
+            .start()
+            .then(() => console.log('SignalR Connected'))
+            .catch((err) => console.error('Error connecting to SignalR:', err));
     }
-  }
+
+    private registerOnTradeResponse() {
+        this.hubConnection.on('TradeResponse', (message: string) => {
+            console.log('Received trade response:', message);
+        });
+    }
+
+    private executeTrade(
+        action: 'Buy' | 'Sell',
+        symbol: string,
+        amount: number,
+        user: Observable<UserDTO | null>
+    ) {
+        const token = this.authService.getToken();
+        if (!token) {
+            console.error('Token not found');
+            return;
+        }
+
+        user.pipe(take(1)).subscribe((userData) => {
+            if (!userData) {
+                console.warn('User not found');
+                return;
+            }
+
+            this.hubConnection
+                .invoke(action, symbol, amount )
+                .then(() => {
+                    console.log(`${action} ${amount} of ${symbol}`);
+                    this.updateUserWallet(userData, symbol, amount, action === 'Buy');
+                })
+                .catch((err) => console.error(`${action} failed:`, err));
+        });
+    }
+
+    Buy(symbol: string, amount: number, user: Observable<UserDTO | null>) {
+        this.executeTrade('Buy', symbol, amount, user);
+    }
+
+    Sell(symbol: string, amount: number, user: Observable<UserDTO | null>) {
+        this.executeTrade('Sell', symbol, amount, user);
+    }
+
+    private updateUserWallet(userData: UserDTO, symbol: string, amount: number, isBuy: boolean) {
+        const walletItem = userData.Wallet.find((item) => item.CryptoSymbol === symbol);
+        if (isBuy) {
+            if (walletItem) {
+                walletItem.Amount += amount;
+            } else {
+                userData.Wallet.push({ CryptoSymbol: symbol, Amount: amount });
+            }
+        } else {
+            if (walletItem) {
+                walletItem.Amount -= amount;
+                if (walletItem.Amount <= 0) {
+                    userData.Wallet = userData.Wallet.filter((item) => item.CryptoSymbol !== symbol);
+                }
+            } else {
+                console.warn(`User does not own any ${symbol}`);
+            }
+        }
+    }
+
+    Stop() {
+        this.hubConnection?.stop();
+    }
 }

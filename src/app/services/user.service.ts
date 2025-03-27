@@ -18,6 +18,7 @@ export class UserService{
 
     getUserData(): Observable<UserDTO> {
         const token = this.authService.getToken();
+        // console.log(token);
         if (!token) {
             console.error('No token found');
             return throwError(() => new Error('No token found'));
@@ -34,6 +35,7 @@ export class UserService{
                 if (typeof response === 'string') {
                     throw new Error('API returned string instead of JSON');
                 }
+                // console.log(response);
                 return new UserDTO(
                     response.email,
                     response.firstName,
