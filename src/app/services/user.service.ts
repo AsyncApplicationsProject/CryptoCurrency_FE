@@ -55,4 +55,57 @@ export class UserService{
             })
         );
     }
+
+    updateUserBalance(newBalance: number | null): void {
+        if (newBalance !== null && newBalance !== undefined) {
+            const currentUser = this.userChanged.getValue();
+
+            if (currentUser) {
+                const updatedUser: UserDTO = {
+                    ...currentUser,
+                    Balance: newBalance,
+                };
+                this.userChanged.next(updatedUser);
+                console.log('Zaktualizowano balans użytkownika:', updatedUser.Balance);
+            } else {
+                console.warn('Nie można zaktualizować balansu: brak zalogowanego użytkownika.');
+            }
+        }
+        else {
+            console.error('New balance is null')
+        }
+    }
+
+    updateUserWallet(symbol: string | null, amount: number | null): void {
+        if (symbol != null && amount !== null) {
+            this.user$.pipe(take(1)).subscribe((user) => {
+                if (!user) {
+                    console.warn('Cannot update wallet - user not logged in.');
+                    return;
+                }
+
+                const updatedUser = { ...user };
+
+                const walletItem = updatedUser.Wallet.find(item => item.CryptoSymbol === symbol);
+
+                if (walletItem) {
+                    walletItem.Amount = amount;
+
+                    // delete crypto if amount is <= 0
+                    if (walletItem.Amount <= 0) {
+                        updatedUser.Wallet = updatedUser.Wallet.filter(item => item.CryptoSymbol !== symbol);
+                    }
+                } else if (amount > 0) {
+                    // add crypto if doesn't exist
+                    updatedUser.Wallet.push({ CryptoSymbol: symbol, Amount: amount });
+                }
+
+                // Emitujemy zaktualizowane dane użytkownika
+                this.userChanged.next(updatedUser);
+                console.log(`User wallet updated: ${symbol} - ${amount}`);
+            });
+        } else {
+            console.error('Amount or Symbol is null');
+        }
+    }
 }

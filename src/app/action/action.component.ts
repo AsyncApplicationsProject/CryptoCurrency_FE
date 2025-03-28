@@ -99,11 +99,11 @@ export class ActionComponent implements OnDestroy {
   }
 
   protected Buy() {
-    this.tradeService.Buy(this.cryptoSymbol, this.buyAmount, this.user$);
+    this.tradeService.Buy(this.cryptoSymbol, this.buyAmount);
   }
 
   protected Sell() {
-    this.tradeService.Sell(this.cryptoSymbol, this.sellAmount, this.user$);
+    this.tradeService.Sell(this.cryptoSymbol, this.sellAmount);
   }
 
   ngOnDestroy() {
