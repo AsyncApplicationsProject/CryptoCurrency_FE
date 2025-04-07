@@ -100,7 +100,7 @@ export class UserService{
                     updatedUser.Wallet.push({ CryptoSymbol: symbol, Amount: amount });
                 }
 
-                // Emitujemy zaktualizowane dane użytkownika
+                // Emit updated user data
                 this.userChanged.next(updatedUser);
                 console.log(`User wallet updated: ${symbol} - ${amount}`);
             });

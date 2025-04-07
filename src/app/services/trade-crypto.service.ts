@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from './auth.service';
 import { UserDTO } from '../models/UserDTO';
@@ -9,13 +9,13 @@ import {UserService} from "./user.service";
     providedIn: 'root',
 })
 export class TradeCryptoService {
-    private hubConnection: signalR.HubConnection;
+    private hubConnection1: signalR.HubConnection;
     private user$: Observable<UserDTO | null>;
 
     constructor(private authService: AuthService, private userService: UserService) {
         this.user$ = userService.user$;
 
-        this.hubConnection = new signalR.HubConnectionBuilder()
+        this.hubConnection1 = new signalR.HubConnectionBuilder()
             .withUrl('https://localhost:7072/tradeHub', {
                 accessTokenFactory: () => this.authService.getToken() ?? '',
                 transport: signalR.HttpTransportType.LongPolling,
@@ -29,14 +29,14 @@ export class TradeCryptoService {
     }
 
     private startConnection() {
-        this.hubConnection
+        this.hubConnection1
             .start()
-            .then(() => console.log('SignalR Connected'))
+            .then(() => console.log('SignalR Trade Connected'))
             .catch((err) => console.error('Error connecting to SignalR:', err));
     }
 
     private registerOnTradeResponse() {
-        this.hubConnection.on('TradeResponse', (tradeResult: { isSuccess: boolean, message: string, userBalance: number | null, cryptoSymbol: string | null, cryptoAmount: number | null }) => {
+        this.hubConnection1.on('TradeResponse', (tradeResult: { isSuccess: boolean, message: string, userBalance: number | null, cryptoSymbol: string | null, cryptoAmount: number | null }) => {
             if(tradeResult) {
                 if(tradeResult.isSuccess) {
                     console.log(`Trade Successful: ${tradeResult.message}`);
@@ -70,11 +70,10 @@ export class TradeCryptoService {
                 return;
             }
 
-            this.hubConnection
+            this.hubConnection1
                 .invoke(action, symbol, amount )
                 .then(() => {
                     console.log(`Invoked ${action}`);
-                    // this.updateUserWallet(userData, symbol, amount, action === 'Buy');
                 })
                 .catch((err) => console.log(`${action} failed:`, err));
         });
@@ -88,27 +87,7 @@ export class TradeCryptoService {
         this.executeTrade('Sell', symbol, amount);
     }
 
-    // private updateUserWallet(userData: UserDTO, symbol: string, amount: number, isBuy: boolean) {
-    //     const walletItem = userData.Wallet.find((item) => item.CryptoSymbol === symbol);
-    //     if (isBuy) {
-    //         if (walletItem) {
-    //             walletItem.Amount += amount;
-    //         } else {
-    //             userData.Wallet.push({ CryptoSymbol: symbol, Amount: amount });
-    //         }
-    //     } else {
-    //         if (walletItem) {
-    //             walletItem.Amount -= amount;
-    //             if (walletItem.Amount <= 0) {
-    //                 userData.Wallet = userData.Wallet.filter((item) => item.CryptoSymbol !== symbol);
-    //             }
-    //         } else {
-    //             console.warn(`User does not own any ${symbol}`);
-    //         }
-    //     }
-    // }
-
     Stop() {
-        this.hubConnection?.stop();
+        this.hubConnection1?.stop();
     }
 }

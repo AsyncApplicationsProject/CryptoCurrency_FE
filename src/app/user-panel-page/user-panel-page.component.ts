@@ -1,9 +1,10 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Observable, take, tap} from "rxjs";
 import {CryptoDTO} from "../models/CryptoDTO";
 import {CryptoCurrencyService} from "../services/crypto-currency.service";
 import {UserDTO} from "../models/UserDTO";
 import {UserService} from "../services/user.service";
+import {TradeCryptoService} from "../services/trade-crypto.service";
 
 @Component({
   selector: 'app-user-panel-page',
@@ -132,17 +133,22 @@ import {UserService} from "../services/user.service";
     }
   `
 })
-export class UserPanelPageComponent implements OnInit {
+export class UserPanelPageComponent implements OnInit, OnDestroy {
   cryptos$: Observable<CryptoDTO[]>;
   user$: Observable<UserDTO | null>;
 
-  constructor(private cryptoService: CryptoCurrencyService, private userService: UserService) {
+  constructor(private cryptoService: CryptoCurrencyService, private userService: UserService, private tradeService: TradeCryptoService) {
     this.cryptos$ = this.cryptoService.cryptos$;
     this.user$ = this.userService.user$;
   }
 
   ngOnInit() {
     this.cryptoService.load();
+  }
+
+  ngOnDestroy() {
+    this.cryptoService.Stop();
+    this.tradeService.Stop();
   }
 
   protected getOwnedAmount(user: UserDTO, cryptoSymbol: string): number {

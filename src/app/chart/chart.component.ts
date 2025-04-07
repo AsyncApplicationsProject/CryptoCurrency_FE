@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import {Component, OnInit, Input} from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartOptions, ChartData, ChartType } from 'chart.js';
 import { CryptoDTO } from "../models/CryptoDTO";
@@ -49,7 +49,6 @@ export class ChartComponent implements OnInit {
       console.warn('No crypto data provided');
     }
   }
-
 
   private updateChartData(crypto: CryptoDTO): void {
     const labels: string[] = [];

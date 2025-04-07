@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnDestroy, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {TradeCryptoService} from "../services/trade-crypto.service";
 import {UserService} from "../services/user.service";
 import {Observable, take} from "rxjs";
@@ -68,7 +68,7 @@ import {UserDTO} from "../models/UserDTO";
     }
   `
 })
-export class ActionComponent implements OnDestroy {
+export class ActionComponent {
   private readonly user$: Observable<UserDTO | null>;
   @Input() cryptoSymbol: string;
   @Output() newCryptoAmount: EventEmitter<number>;
@@ -104,9 +104,5 @@ export class ActionComponent implements OnDestroy {
 
   protected Sell() {
     this.tradeService.Sell(this.cryptoSymbol, this.sellAmount);
-  }
-
-  ngOnDestroy() {
-    this.tradeService.Stop();
   }
 }
