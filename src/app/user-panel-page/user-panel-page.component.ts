@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Observable, take, tap} from "rxjs";
+import {firstValueFrom, map, Observable, take, tap} from "rxjs";
 import {CryptoDTO} from "../models/CryptoDTO";
 import {CryptoCurrencyService} from "../services/crypto-currency.service";
 import {UserDTO} from "../models/UserDTO";
@@ -15,16 +15,16 @@ import {TradeCryptoService} from "../services/trade-crypto.service";
         <app-user-info class="user__panel__info--data"></app-user-info>
       </div>
       <div class="user__panel__market">
-        <div *ngFor="let crypto of cryptos$ | async" class="user__panel__market--item">
+        <div *ngFor="let cryptoSymbol of this.cryptoSymbols$ | async" class="user__panel__market--item">
           <div class="chart">
-            <app-chart [crypto]="crypto"></app-chart>
+            <app-chart [cryptoSymbol]="cryptoSymbol"></app-chart>
           </div>
           
           <div class="crypto__info__container">
-            <app-action [cryptoSymbol]="crypto.Symbol" (newCryptoAmount)="updateCryptoAmount(crypto.Symbol, $event)" class="action__container"></app-action>
+            <app-action [cryptoSymbol]="cryptoSymbol" (newCryptoAmount)="updateCryptoAmount(cryptoSymbol, $event)" class="action__container"></app-action>
           
             <div *ngIf="user$ | async as user">
-                <p>Owned: {{ getOwnedAmount(user, crypto.Symbol) }} {{ crypto.Symbol }}</p>
+                <p>Owned: {{ getOwnedAmount(user, cryptoSymbol) }} {{ cryptoSymbol }}</p>
             </div>
           </div>
         </div>
@@ -53,7 +53,8 @@ import {TradeCryptoService} from "../services/trade-crypto.service";
     .user__panel__market {
       flex: 3;
       padding: 3rem 10rem 3rem 3rem;
-      background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_640.jpg");
+      background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public/bitcoin-7071818_640.jpg");
+      min-height: 100vh;
     }
 
     .user__panel__market--item {
@@ -96,7 +97,7 @@ import {TradeCryptoService} from "../services/trade-crypto.service";
 
     @media (min-width: 768px) {
       .user__panel__market {
-        background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_1280.jpg");
+        background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public/bitcoin-7071818_1280.jpg");
         background-size: cover;
         background-position: center;
       }
@@ -104,7 +105,7 @@ import {TradeCryptoService} from "../services/trade-crypto.service";
 
     @media (min-width: 1200px) {
       .user__panel__market {
-        background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public//bitcoin-7071818_1920.jpg");
+        background-image: radial-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("../../../public/bitcoin-7071818_1920.jpg");
       }
     }
 
@@ -134,16 +135,17 @@ import {TradeCryptoService} from "../services/trade-crypto.service";
   `
 })
 export class UserPanelPageComponent implements OnInit, OnDestroy {
-  cryptos$: Observable<CryptoDTO[]>;
+  cryptoSymbols$: Observable<string[]>;
   user$: Observable<UserDTO | null>;
 
   constructor(private cryptoService: CryptoCurrencyService, private userService: UserService, private tradeService: TradeCryptoService) {
-    this.cryptos$ = this.cryptoService.cryptos$;
+    this.cryptoSymbols$ = this.cryptoService.cryptoSymbols$;
     this.user$ = this.userService.user$;
   }
 
   ngOnInit() {
     this.cryptoService.load();
+
   }
 
   ngOnDestroy() {

@@ -17,8 +17,13 @@ export class CryptoCurrencyService {
   cryptos$: Observable<CryptoDTO[]>;
   private cryptosSubject = new BehaviorSubject<CryptoDTO[]>([]);
 
+  cryptoSymbols$: Observable<string[]>
+  private cryptoSymbolsSubject = new BehaviorSubject<string[]>([]);
+
+
   constructor(private http: HttpClient) {
     this.cryptos$ = this.cryptosSubject.asObservable();
+    this.cryptoSymbols$ = this.cryptoSymbolsSubject.asObservable();
 
     this.hubConnection2 = new signalR.HubConnectionBuilder()
         .withUrl('https://localhost:7266/priceHistoryHub', {
@@ -66,7 +71,10 @@ export class CryptoCurrencyService {
               item.priceHistory.map((ph:any) => new PriceHistoryDTO(ph.date, ph.price))
           ));
         }),
-        tap(cryptos => this.cryptosSubject.next(cryptos)),
+        tap(cryptos => {
+          this.cryptosSubject.next(cryptos)
+          this.cryptoSymbolsSubject.next(cryptos.map(c => c.Symbol))
+        }),
         catchError(error => {
           console.error('Error fetching cryptos:', error);
           throw error;

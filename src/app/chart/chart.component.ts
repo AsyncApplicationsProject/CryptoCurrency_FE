@@ -1,10 +1,13 @@
-import {Component, OnInit, Input} from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartOptions, ChartData, ChartType } from 'chart.js';
 import { CryptoDTO } from "../models/CryptoDTO";
+import { CryptoCurrencyService } from "../services/crypto-currency.service";
+import { Observable, Subscription } from "rxjs";
 
 @Component({
   selector: 'app-chart',
+  standalone: true,
   imports: [BaseChartDirective],
   template: `
     <canvas baseChart
@@ -14,14 +17,17 @@ import { CryptoDTO } from "../models/CryptoDTO";
             [type]="chartType">
     </canvas>
   `,
-  styles: `
-  canvas {
-    max-height: 40vh;
-  }
-  `
+  styles: [`
+    canvas {
+      max-height: 40vh;
+    }
+  `]
 })
-export class ChartComponent implements OnInit {
-  @Input() crypto: CryptoDTO | undefined;
+export class ChartComponent implements OnInit, OnDestroy {
+  cryptos$: Observable<CryptoDTO[]>;
+  private subscription: Subscription | null = null;
+
+  @Input() cryptoSymbol: string | undefined;
 
   chartType: ChartType = 'line';
   chartData: ChartData = {
@@ -31,31 +37,40 @@ export class ChartComponent implements OnInit {
 
   chartOptions: ChartOptions = {
     responsive: true,
+    animation: false,
     scales: {
       x: {
         beginAtZero: true
       },
       y: {
-        beginAtZero: true
+        beginAtZero: false
       }
     }
   };
 
-  ngOnInit() {
-    // console.log('Received crypto data:', this.crypto);
-    if (this.crypto) {
-      this.updateChartData(this.crypto);
-    } else {
-      console.warn('No crypto data provided');
-    }
+  constructor(private cryptoService: CryptoCurrencyService) {
+    this.cryptos$ = cryptoService.cryptos$;
   }
 
-  private updateChartData(crypto: CryptoDTO): void {
+  ngOnInit() {
+    if (!this.cryptoSymbol) {
+      console.warn('No crypto symbol provided.');
+      return;
+    }
+
+    this.subscription = this.cryptos$.subscribe(cryptos => {
+      const crypto = cryptos.find(c => c.Symbol === this.cryptoSymbol);
+      if (crypto) {
+        this.setChartData(crypto);
+      }
+    });
+  }
+
+  private setChartData(crypto: CryptoDTO): void {
     const labels: string[] = [];
     const prices: number[] = [];
 
     crypto.PriceHistory.forEach((history) => {
-      // console.log(history);
       if (history.Date && history.Price !== undefined) {
         labels.push(new Date(history.Date).toLocaleTimeString());
         prices.push(history.Price);
@@ -74,5 +89,9 @@ export class ChartComponent implements OnInit {
         borderWidth: 1
       }]
     };
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 }
